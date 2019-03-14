@@ -34,7 +34,7 @@ class m190313_161737_ids_to_uid extends Migration
                     if (count($sourceArr) !== 2) {
                         continue;
                     }
-                    // Entry sources
+                    // Entry source
                     if ($key === 'fruitstudios\linkit\models\Entry') {
                         $sectionUid = (new Query())
                             ->select('uid')
@@ -47,7 +47,7 @@ class m190313_161737_ids_to_uid extends Migration
                         $settings['types']['fruitstudios\linkit\models\Entry']['sources'][$key] = 'section:' . $sectionUid[0];
                         $needsUpdate = true;
                     }
-                    // Category sources
+                    // Category source
                     if ($key === 'fruitstudios\linkit\models\Category') {
                         $groupUid = (new Query())
                             ->select('uid')
@@ -60,8 +60,33 @@ class m190313_161737_ids_to_uid extends Migration
                         $settings['types']['fruitstudios\linkit\models\Category']['sources'][$key] = 'group:' . $groupUid[0];
                         $needsUpdate = true;
                     }
-
-                    // @TODO:  users & assets
+                    // Asset source
+                    if ($key === 'fruitstudios\linkit\models\Asset') {
+                        $folderUid = (new Query())
+                            ->select('uid')
+                            ->from(['{{%volumefolders}}'])
+                            ->where(['id' => $sourceArr[1]])
+                            ->column();
+                        if (!isset($folderUid[0])) {
+                            continue;
+                        }
+                        $settings['types']['fruitstudios\linkit\models\Asset']['sources'][$key] = 'folder:' . $folderUid[0];
+                        $needsUpdate = true;
+                    }
+                    // User souces
+                    if ($key === 'fruitstudios\linkit\models\User') {
+                        $usergroupUid = (new Query())
+                            ->select('uid')
+                            ->from(['{{%usergroups}}'])
+                            ->where(['id' => $sourceArr[1]])
+                            ->column();
+                        if (!isset($usergroupUid[0])) {
+                            continue;
+                        }
+                        $settings['types']['fruitstudios\linkit\models\User']['sources'][$key] = 'group:' . $usergroupUid[0];
+                        $needsUpdate = true;
+                    }
+                    // @TODO: product source
                 }
             }
             if (!$needsUpdate) {
