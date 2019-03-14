@@ -25,17 +25,19 @@ class m190313_161737_ids_to_uid extends Migration
         foreach($linkItFields as $field) {
             $needsUpdate = false;
             $settings = \json_decode($field['settings'], true);
+            echo "\n    > Migrating LinkitField sources for field #{$field['id']} ...\n";
             foreach($settings['types'] as $model => $type) {
                 if (!isset($type['sources']) || !is_array($type['sources'])) {
                     continue;
                 }
+                
                 foreach($type['sources'] as $key => $source) {
                     $sourceArr = explode(':', $source, 2);
                     if (count($sourceArr) !== 2) {
                         continue;
                     }
                     // Entry source
-                    if ($key === 'fruitstudios\linkit\models\Entry') {
+                    if ($model === 'fruitstudios\linkit\models\Entry') {
                         $sectionUid = (new Query())
                             ->select('uid')
                             ->from(['{{%sections}}'])
@@ -45,10 +47,11 @@ class m190313_161737_ids_to_uid extends Migration
                             continue;
                         }
                         $settings['types']['fruitstudios\linkit\models\Entry']['sources'][$key] = 'section:' . $sectionUid[0];
+                        echo "    > Updating Entry source to use uid {$sectionUid[0]} ...\n";
                         $needsUpdate = true;
                     }
                     // Category source
-                    if ($key === 'fruitstudios\linkit\models\Category') {
+                    if ($model === 'fruitstudios\linkit\models\Category') {
                         $groupUid = (new Query())
                             ->select('uid')
                             ->from(['{{%categorygroups}}'])
@@ -58,10 +61,11 @@ class m190313_161737_ids_to_uid extends Migration
                             continue;
                         }
                         $settings['types']['fruitstudios\linkit\models\Category']['sources'][$key] = 'group:' . $groupUid[0];
+                        echo "    > Updating Category source to use uid {$groupUid[0]} ...\n";
                         $needsUpdate = true;
                     }
                     // Asset source
-                    if ($key === 'fruitstudios\linkit\models\Asset') {
+                    if ($model === 'fruitstudios\linkit\models\Asset') {
                         $folderUid = (new Query())
                             ->select('uid')
                             ->from(['{{%volumefolders}}'])
@@ -71,10 +75,11 @@ class m190313_161737_ids_to_uid extends Migration
                             continue;
                         }
                         $settings['types']['fruitstudios\linkit\models\Asset']['sources'][$key] = 'folder:' . $folderUid[0];
+                        echo "    > Updating Asset source to use uid {$folderUid[0]} ...\n";
                         $needsUpdate = true;
                     }
                     // User souces
-                    if ($key === 'fruitstudios\linkit\models\User') {
+                    if ($model === 'fruitstudios\linkit\models\User') {
                         $usergroupUid = (new Query())
                             ->select('uid')
                             ->from(['{{%usergroups}}'])
@@ -84,12 +89,14 @@ class m190313_161737_ids_to_uid extends Migration
                             continue;
                         }
                         $settings['types']['fruitstudios\linkit\models\User']['sources'][$key] = 'group:' . $usergroupUid[0];
+                        echo "    > Updating User source to use uid {$usergroupUid[0]} ...\n";
                         $needsUpdate = true;
                     }
                     // @TODO: product source
                 }
             }
             if (!$needsUpdate) {
+                echo "    > No migration needed for LinkitField #{$field['id']} ...\n";
                 continue;
             }
             $this->update('{{%fields}}', [
